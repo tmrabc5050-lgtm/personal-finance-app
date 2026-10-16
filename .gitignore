@@ -1,0 +1,60 @@
+# ==========================================
+# Personal Finance Super App - .gitignore
+# ==========================================
+
+# 1. Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# 2. Production & Build Artifacts
+dist/
+dist-ssr/
+build/
+*.local
+
+# 3. Environment & Secret Credentials
+.env
+.env.*
+!.env.example
+!.env.template
+
+# 4. Local Database, Backups & Dumps
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+local_backups/
+export_*.json
+*.backup
+
+# 5. Logs & Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 6. Cache & Temporary Engine Files
+.cache/
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# 7. Operating System Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 8. IDE & Editor Artifacts
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
