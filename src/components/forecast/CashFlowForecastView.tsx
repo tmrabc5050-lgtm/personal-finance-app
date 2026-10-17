@@ -268,8 +268,8 @@ export const CashFlowForecastView: React.FC<CashFlowForecastViewProps> = ({
                         <tr
                           key={`${pt.date}_${idx}`}
                           style={{
-                            borderBottom: '1px solid #f1f5f9',
-                            backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fafafa',
+                            borderBottom: '1px solid var(--border-subtle)',
+                            backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.03)',
                           }}
                         >
                           <td style={{ padding: '10px', fontWeight: 500 }}>
@@ -336,12 +336,12 @@ export const CashFlowForecastView: React.FC<CashFlowForecastViewProps> = ({
 
             <div
               style={{
-                backgroundColor: '#fffbeb',
-                border: '1px solid #fef3c7',
-                borderRadius: '6px',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.25)',
+                borderRadius: '8px',
                 padding: '10px 14px',
                 fontSize: '0.8rem',
-                color: '#92400e',
+                color: '#fde68a',
               }}
             >
               <strong>⚠️ আর্থিক সতর্কবার্তা ও সীমাবদ্ধতা:</strong> এই পূর্বাভাসটি আপনার সক্রিয় পুনরাবৃত্ত
