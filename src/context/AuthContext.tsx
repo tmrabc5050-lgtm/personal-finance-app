@@ -115,15 +115,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isConfigured || !supabase) {
       throw new Error('Supabase কনফিগারেশন অনুপস্থিত। .env.local ফাইলে ক্রেডেনশিয়াল প্রদান করুন।');
     }
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+    const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin,
+        skipBrowserRedirect: true,
       },
     });
     if (oauthError) {
       setError(oauthError.message);
       throw oauthError;
+    }
+    if (data?.url) {
+      window.location.href = data.url;
     }
   };
 
