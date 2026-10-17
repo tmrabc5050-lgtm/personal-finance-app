@@ -30,6 +30,7 @@ import { GoalsSummaryWidget } from './components/dashboard/GoalsSummaryWidget';
 import { BackupModal } from './components/backup/BackupModal';
 import { AccountModal } from './components/accounts/AccountModal';
 import { AuthModal } from './components/auth/AuthModal';
+import { AuthGateway } from './components/auth/AuthGateway';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import { SupabaseStorageEngine } from './services/supabaseStorageEngine';
@@ -92,6 +93,21 @@ function AppContent() {
   const [activeService, setActiveService] = useState<PersistentFinanceService>(persistentFinanceService);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [, setCloudStorageEngine] = useState<SupabaseStorageEngine | null>(null);
+
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('finance_app_guest_mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleGuestExplore = () => {
+    setIsGuestMode(true);
+    try {
+      localStorage.setItem('finance_app_guest_mode', 'true');
+    } catch {}
+  };
 
   useEffect(() => {
     if (user && authMode === 'cloud') {
@@ -506,6 +522,11 @@ function AppContent() {
   };
 
   const activeNavSection = currentView === 'dashboard' ? activeSection : currentView === 'history' ? 'transactions' : currentView;
+
+  // Unauthenticated Gateway: show auth welcome screen first
+  if (!user && !isGuestMode) {
+    return <AuthGateway onGuestExplore={handleGuestExplore} />;
+  }
 
   return (
     <div className="app-shell">

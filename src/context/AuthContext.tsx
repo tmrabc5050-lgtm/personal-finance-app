@@ -17,6 +17,7 @@ export interface AuthContextType {
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
@@ -109,6 +110,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(mapUser(data.user));
   };
 
+  const signInWithGoogle = async () => {
+    setError(null);
+    if (!isConfigured || !supabase) {
+      throw new Error('Supabase কনফিগারেশন অনুপস্থিত। .env.local ফাইলে ক্রেডেনশিয়াল প্রদান করুন।');
+    }
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (oauthError) {
+      setError(oauthError.message);
+      throw oauthError;
+    }
+  };
+
   const signOut = async () => {
     setError(null);
     if (isConfigured && supabase) {
@@ -144,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       error,
       signIn,
       signUp,
+      signInWithGoogle,
       signOut,
       resetPassword,
       clearError,
