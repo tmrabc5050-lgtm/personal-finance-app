@@ -3,7 +3,7 @@
  * Batch 1: Core Finance Engine & Persistent Transaction Management
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useDashboardData } from './hooks/useDashboardData';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
@@ -30,13 +30,8 @@ import { GoalsSummaryWidget } from './components/dashboard/GoalsSummaryWidget';
 import { BackupModal } from './components/backup/BackupModal';
 import { AccountModal } from './components/accounts/AccountModal';
 import { AuthModal } from './components/auth/AuthModal';
-import { MigrationModal } from './components/auth/MigrationModal';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
-import {
-  inspectLocalDataForMigration,
-  MigrationSummary,
-} from './services/migrationService';
 import { SupabaseStorageEngine } from './services/supabaseStorageEngine';
 import {
   persistentFinanceService,
@@ -96,10 +91,7 @@ function AppContent() {
   const { user, authMode } = useAuth();
   const [activeService, setActiveService] = useState<PersistentFinanceService>(persistentFinanceService);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState<boolean>(false);
-  const [localMigrationSummary, setLocalMigrationSummary] = useState<MigrationSummary | null>(null);
-  const [cloudStorageEngine, setCloudStorageEngine] = useState<SupabaseStorageEngine | null>(null);
-  const promptedMigrationUserRef = useRef<string | null>(null);
+  const [, setCloudStorageEngine] = useState<SupabaseStorageEngine | null>(null);
 
   useEffect(() => {
     if (user && authMode === 'cloud') {
@@ -107,17 +99,6 @@ function AppContent() {
       setCloudStorageEngine(cloudEngine);
       const cloudService = new PersistentFinanceService(cloudEngine);
       setActiveService(cloudService);
-
-      // Check if local non-empty data exists and prompt migration once per user
-      if (promptedMigrationUserRef.current !== user.id) {
-        promptedMigrationUserRef.current = user.id;
-        inspectLocalDataForMigration().then(({ hasData, summary }) => {
-          if (hasData) {
-            setLocalMigrationSummary(summary);
-            setIsMigrationModalOpen(true);
-          }
-        });
-      }
     } else {
       setCloudStorageEngine(null);
       setActiveService(persistentFinanceService);
@@ -958,33 +939,7 @@ function AppContent() {
         onErrorMessage={(msg) => setFeedbackToast({ type: 'error', message: msg })}
       />
 
-      {/* Safe Local Data Migration Modal */}
-      {user && cloudStorageEngine && localMigrationSummary && (
-        <MigrationModal
-          isOpen={isMigrationModalOpen}
-          onClose={() => setIsMigrationModalOpen(false)}
-          userId={user.id}
-          userEmail={user.email}
-          localSummary={localMigrationSummary}
-          cloudEngine={cloudStorageEngine}
-          onMigrationComplete={() => {
-            setIsMigrationModalOpen(false);
-            refetch();
-            setFeedbackToast({
-              type: 'success',
-              message: 'লোকাল ডেটা সফলভাবে ক্লাউডে স্থানান্তরিত হয়েছে!',
-            });
-          }}
-          onKeepClean={() => {
-            setIsMigrationModalOpen(false);
-            refetch();
-            setFeedbackToast({
-              type: 'info',
-              message: 'নতুন ক্লাউড অ্যাকাউন্ট প্রস্তুত। লোকাল ডেটা ডিভাইসে অক্ষত রয়েছে।',
-            });
-          }}
-        />
-      )}
+
     </div>
   );
 }
