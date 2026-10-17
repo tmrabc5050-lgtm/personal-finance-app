@@ -14,3 +14,13 @@ createRoot(rootElement).render(
     <App />
   </StrictMode>
 );
+
+// PWA Service Worker Registration (Zero inline script for CSP compliance)
+if ('serviceWorker' in navigator && !import.meta.env.DEV) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(
+      (reg) => console.log('PWA ServiceWorker registered:', reg.scope),
+      (err) => console.log('PWA ServiceWorker registration failed:', err)
+    );
+  });
+}

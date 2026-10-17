@@ -97,10 +97,9 @@ export interface BackupValidationResult {
  * Escape a CSV field value
  */
 function escapeCSV(field: string): string {
-  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-    return `"${field.replace(/"/g, '""')}"`;
-  }
-  return field;
+  // Prevent CSV Formula Injection in spreadsheets (Excel/Sheets)
+  const safe = /^[=+\-@\t\r]/.test(field) ? `'${field}` : field;
+  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
 /**

@@ -1,5 +1,5 @@
 // Personal Finance Super App - Service Worker
-const CACHE_NAME = 'pf-superapp-v1';
+const CACHE_NAME = 'pf-superapp-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -34,42 +34,53 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests, skip Supabase API calls from SW cache to preserve real-time sync
+  // Only cache GET requests, never intercept Supabase API or auth calls
   if (event.request.method !== 'GET' || event.request.url.includes('.supabase.co')) {
     return;
   }
 
+  // 1. Navigation requests (HTML pages) -> Network-First to avoid stale bundle hashes
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match('/index.html').then((cached) => cached || Response.error()))
+    );
+    return;
+  }
+
+  // 2. Static Assets (JS, CSS, images, fonts) -> Cache-First with background revalidation
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cached asset and update in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
-            });
-          }
-        }).catch(() => {});
+        // Revalidate in background
+        fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+            }
+          })
+          .catch(() => {});
         return cachedResponse;
       }
 
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+      return fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
           return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        })
+        .catch(() => {
+          return new Response('Network offline', { status: 503, statusText: 'Service Unavailable' });
         });
-
-        return networkResponse;
-      }).catch(() => {
-        // Fallback to offline index if HTML requested
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('/index.html');
-        }
-      });
     })
   );
 });
