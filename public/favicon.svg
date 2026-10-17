@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Rounded Square App Icon -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#bgGrad)" filter="url(#shadow)" />
+  
+  <!-- Modern Geometric Wallet / Vault Symbol -->
+  <rect x="112" y="160" width="288" height="208" rx="36" fill="#064E3B" opacity="0.4" />
+  <rect x="112" y="144" width="288" height="208" rx="36" fill="#ECFDF5" />
+  
+  <!-- Wallet Flap & Stripe -->
+  <path d="M 112 216 L 400 216" stroke="#059669" stroke-width="14" stroke-linecap="round" />
+  <rect x="296" y="212" width="112" height="72" rx="20" fill="url(#bgGrad)" />
+  
+  <!-- Gold Clasp / Coin -->
+  <circle cx="336" cy="248" r="16" fill="url(#goldGrad)" />
+  <circle cx="336" cy="248" r="8" fill="#FFFFFF" opacity="0.6" />
+  
+  <!-- Sparkling Finance Star -->
+  <path d="M 390 120 Q 400 135 415 145 Q 400 155 390 170 Q 380 155 365 145 Q 380 135 390 120 Z" fill="url(#goldGrad)" />
+</svg>
