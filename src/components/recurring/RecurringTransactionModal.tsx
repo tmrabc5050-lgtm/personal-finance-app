@@ -122,7 +122,7 @@ export const RecurringTransactionModal: React.FC<RecurringTransactionModalProps>
       return;
     }
 
-    if (!amountStr || parseFloat(amountStr) <= 0) {
+    if (!amountStr.trim()) {
       setErrorMessage('একটি সঠিক ধনাত্মক টাকার পরিমাণ উল্লেখ করুন।');
       return;
     }
@@ -135,7 +135,7 @@ export const RecurringTransactionModal: React.FC<RecurringTransactionModalProps>
         return;
       }
     } catch {
-      setErrorMessage('টাকার পরিমাণ সঠিক ফরম্যাটে লিখুন।');
+      setErrorMessage('টাকার পরিমাণ সঠিক ফরম্যাটে লিখুন। উদাহরণ: "১০০" বা "১২৫০.৫০"');
       return;
     }
 

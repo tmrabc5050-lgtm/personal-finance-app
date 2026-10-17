@@ -22,6 +22,17 @@ export const MAX_SAFE_BALANCE_PAISA = BigInt(Number.MAX_SAFE_INTEGER); //  9,007
 export const TRANSACTION_INPUT_REGEX = /^(0|[1-9]\d{0,8})(\.\d{1,2})?$/;
 
 const BENGALI_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'] as const;
+const BENGALI_DIGITS_STR = '০১২৩৪৫৬৭৮৯';
+
+/**
+ * Normalizes input strings by converting Bengali digits (০-৯) to ASCII digits (0-9)
+ * and stripping out grouping commas (e.g. "৫০,০০০" -> "50000").
+ */
+export function normalizeAmountInput(input: string): string {
+  return input
+    .replace(/[০-৯]/g, (d) => String(BENGALI_DIGITS_STR.indexOf(d)))
+    .replace(/,/g, '');
+}
 
 /**
  * Convert any string containing ASCII digits (0-9) to Bengali digits (০-৯).
@@ -33,18 +44,18 @@ export function toBengaliNumeral(input: string | number | bigint): string {
 }
 
 /**
- * Validates and converts a BDT decimal string (e.g. "1250.50") into integer paisa (BigInt).
+ * Validates and converts a BDT decimal string (e.g. "1250.50", "১২৫০.৫০", or "৫০,০০০") into integer paisa (BigInt).
  * Throws an Error with a descriptive message if invalid.
  */
 export function parseBDTToPaisa(bdtStr: string): bigint {
-  const trimmed = bdtStr.trim();
+  const trimmed = normalizeAmountInput(bdtStr.trim());
 
   if (!trimmed) {
     throw new Error('টাকার পরিমাণ খালি হতে পারে না');
   }
 
   if (!TRANSACTION_INPUT_REGEX.test(trimmed)) {
-    throw new Error('ভুল টাকার ফরম্যাট। উদাহরণ: "১০০" বা "১২৫০.৫০"');
+    throw new Error('ভুল টাকার ফরম্যাট। উদাহরণ: "১০০", "৫০,০০০" বা "১২৫০.৫০"');
   }
 
   const [takaPart, rawPaisaPart = ''] = trimmed.split('.');
@@ -76,11 +87,7 @@ export function formatPaisaToDecimalString(paisa: bigint): string {
   const paisaStr = remPaisa.toString().padStart(2, '0');
   const sign = isNegative ? '-' : '';
 
-  return `${sign}${taka.toString()}.${paisaPaisaString(paisaStr)}`;
-}
-
-function paisaPaisaString(str: string): string {
-  return str;
+  return `${sign}${taka.toString()}.${paisaStr}`;
 }
 
 /**

@@ -213,6 +213,9 @@ export class PersistentFinanceService implements IDashboardService {
       throw new Error('অ্যাকাউন্টটি খুঁজে পাওয়া যায়নি');
     }
 
+    if (this.engine.deleteByIds) {
+      await this.engine.deleteByIds('accounts', [id]);
+    }
     await this.engine.writeAccounts(filtered.map(accountToDTO));
   }
 
@@ -426,6 +429,10 @@ export class PersistentFinanceService implements IDashboardService {
     }
 
     transactions.splice(txIndex, 1);
+
+    if (this.engine.deleteByIds) {
+      await this.engine.deleteByIds('transactions', [id]);
+    }
 
     await this.engine.writeAccountsAndTransactions(
       accounts.map(accountToDTO),
@@ -894,8 +901,8 @@ export class PersistentFinanceService implements IDashboardService {
     await this.ensureReady();
     const allBudgets = await this.getBudgets();
     const remaining = allBudgets.filter((b) => b.id !== id);
-    if (remaining.length === allBudgets.length) {
-      return false;
+    if (this.engine.deleteByIds) {
+      await this.engine.deleteByIds('budgets', [id]);
     }
     await this.engine.writeBudgets(remaining.map(budgetToDTO));
     return true;
@@ -1201,11 +1208,20 @@ export class PersistentFinanceService implements IDashboardService {
     if (remainingGoals.length === allGoals.length) {
       return false;
     }
-    await this.engine.writeSavingsGoals(remainingGoals.map(savingsGoalToDTO));
 
     // Delete associated contribution records
     const allContribs = (await this.engine.readGoalContributions()).map(dtoToGoalContribution);
+    const toDeleteContribIds = allContribs.filter((c) => c.goalId === id).map((c) => c.id);
     const remainingContribs = allContribs.filter((c) => c.goalId !== id);
+
+    if (this.engine.deleteByIds) {
+      if (toDeleteContribIds.length > 0) {
+        await this.engine.deleteByIds('goal_contributions', toDeleteContribIds);
+      }
+      await this.engine.deleteByIds('savings_goals', [id]);
+    }
+
+    await this.engine.writeSavingsGoals(remainingGoals.map(savingsGoalToDTO));
     await this.engine.writeGoalContributions(remainingContribs.map(goalContributionToDTO));
 
     return true;
@@ -1847,6 +1863,9 @@ export class PersistentFinanceService implements IDashboardService {
     const filtered = all.filter((r) => r.id !== id);
     if (filtered.length === all.length) {
       return false;
+    }
+    if (this.engine.deleteByIds) {
+      await this.engine.deleteByIds('recurring_transactions', [id]);
     }
     await this.engine.writeRecurringTransactions(filtered.map(recurringToDTO));
     return true;

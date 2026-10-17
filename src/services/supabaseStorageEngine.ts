@@ -43,6 +43,23 @@ import {
   reconciliationToDTO,
 } from './storageService';
 
+/**
+ * Helper to fetch all rows across 1,000-row boundaries to prevent silent truncation.
+ */
+async function fetchAll<T>(
+  build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>
+): Promise<T[]> {
+  const PAGE = 1000;
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await build(from, from + PAGE - 1);
+    if (error) throw error;
+    out.push(...(data ?? []));
+    if (!data || data.length < PAGE) break;
+  }
+  return out;
+}
+
 export class SupabaseStorageEngine implements IFinanceStorageEngine {
   private userId: string;
   private client: SupabaseClient | null;
@@ -57,6 +74,25 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
       throw new Error('Supabase client is not initialized or configured.');
     }
     return this.client;
+  }
+
+  /**
+   * Delete records by ID from a given table strictly scoped to current user_id.
+   * Resolves Critical C1: guarantees deleted records are removed from PostgreSQL.
+   */
+  async deleteByIds(
+    table: 'accounts' | 'transactions' | 'budgets' | 'savings_goals' | 'goal_contributions' | 'recurring_transactions' | 'account_reconciliations',
+    ids: string[]
+  ): Promise<void> {
+    if (ids.length === 0) return;
+    const client = this.getClient();
+    const { error } = await client
+      .from(table)
+      .delete()
+      .eq('user_id', this.userId)
+      .in('id', ids);
+
+    if (error) throw error;
   }
 
   async initialize(): Promise<void> {
@@ -150,16 +186,17 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readAccounts(): Promise<AccountDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('accounts')
-      .select('*')
-      .eq('user_id', this.userId)
-      .order('created_at', { ascending: true });
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('accounts')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       name: row.name,
       type: row.type,
@@ -194,16 +231,17 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readTransactions(): Promise<TransactionDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('transactions')
-      .select('*')
-      .eq('user_id', this.userId)
-      .order('created_at', { ascending: true });
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('transactions')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       type: row.type,
       amountPaisaStr: String(row.amount_paisa),
@@ -253,15 +291,18 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readBudgets(): Promise<BudgetDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('budgets')
-      .select('*')
-      .eq('user_id', this.userId);
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('budgets')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('year', { ascending: false })
+        .order('month', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       category: row.category,
       amountPaisaStr: String(row.amount_paisa),
@@ -298,15 +339,17 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readSavingsGoals(): Promise<SavingsGoalDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('savings_goals')
-      .select('*')
-      .eq('user_id', this.userId);
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('savings_goals')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       name: row.name,
       targetAmountPaisaStr: String(row.target_amount_paisa),
@@ -349,15 +392,18 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readGoalContributions(): Promise<GoalContributionDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('goal_contributions')
-      .select('*')
-      .eq('user_id', this.userId);
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('goal_contributions')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       goalId: row.goal_id,
       amountPaisaStr: String(row.amount_paisa),
@@ -392,15 +438,17 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readRecurringTransactions(): Promise<RecurringTransactionDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('recurring_transactions')
-      .select('*')
-      .eq('user_id', this.userId);
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('recurring_transactions')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       name: row.name,
       type: row.type,
@@ -488,15 +536,18 @@ export class SupabaseStorageEngine implements IFinanceStorageEngine {
 
   async readAccountReconciliations(): Promise<AccountReconciliationDTO[]> {
     const client = this.getClient();
-    const { data, error } = await client
-      .from('account_reconciliations')
-      .select('*')
-      .eq('user_id', this.userId);
+    const rows = await fetchAll<any>((from, to) =>
+      client
+        .from('account_reconciliations')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('statement_date', { ascending: false })
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
-    if (error) throw error;
-    if (!data) return [];
-
-    return data.map((row: any) => ({
+    return rows.map((row: any) => ({
       id: row.id,
       accountId: row.account_id,
       statementDate: row.statement_date,

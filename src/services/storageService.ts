@@ -437,6 +437,10 @@ export interface IFinanceStorageEngine {
   writeDashboardPreferences(prefs: DashboardPreferencesDTO): Promise<void>;
   readAccountReconciliations(): Promise<AccountReconciliationDTO[]>;
   writeAccountReconciliations(reconciliations: AccountReconciliationDTO[]): Promise<void>;
+  deleteByIds?(
+    table: 'accounts' | 'transactions' | 'budgets' | 'savings_goals' | 'goal_contributions' | 'recurring_transactions' | 'account_reconciliations',
+    ids: string[]
+  ): Promise<void>;
   writeAllData(
     accounts: AccountDTO[],
     transactions: TransactionDTO[],
@@ -453,6 +457,36 @@ export interface IFinanceStorageEngine {
  * Core Local Storage Engine
  */
 export class FinanceStorageEngine implements IFinanceStorageEngine {
+  async deleteByIds(
+    table: 'accounts' | 'transactions' | 'budgets' | 'savings_goals' | 'goal_contributions' | 'recurring_transactions' | 'account_reconciliations',
+    ids: string[]
+  ): Promise<void> {
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+
+    if (table === 'accounts') {
+      const cur = await this.readAccounts();
+      await this.writeAccounts(cur.filter((a) => !idSet.has(a.id)));
+    } else if (table === 'transactions') {
+      const cur = await this.readTransactions();
+      await this.writeTransactions(cur.filter((t) => !idSet.has(t.id)));
+    } else if (table === 'budgets') {
+      const cur = await this.readBudgets();
+      await this.writeBudgets(cur.filter((b) => !idSet.has(b.id)));
+    } else if (table === 'savings_goals') {
+      const cur = await this.readSavingsGoals();
+      await this.writeSavingsGoals(cur.filter((g) => !idSet.has(g.id)));
+    } else if (table === 'goal_contributions') {
+      const cur = await this.readGoalContributions();
+      await this.writeGoalContributions(cur.filter((c) => !idSet.has(c.id)));
+    } else if (table === 'recurring_transactions') {
+      const cur = await this.readRecurringTransactions();
+      await this.writeRecurringTransactions(cur.filter((r) => !idSet.has(r.id)));
+    } else if (table === 'account_reconciliations') {
+      const cur = await this.readAccountReconciliations();
+      await this.writeAccountReconciliations(cur.filter((r) => !idSet.has(r.id)));
+    }
+  }
   private isInitialized = false;
 
   /**
