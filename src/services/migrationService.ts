@@ -140,26 +140,81 @@ export async function executeLocalToCloudMigration(
     const validRecurring = recurring.filter((r) => accountIds.has(r.accountId));
     const validReconciliations = reconciliations.filter((r) => accountIds.has(r.accountId));
 
-    // Step 4: Write validated records to user's Supabase cloud storage
+    // Step 3.5: Deterministically scope entity IDs with the user's UUID suffix.
+    // This prevents primary key collisions with mock IDs (e.g. acc_cash) across different accounts.
+    const userSuffix = userId.replace(/-/g, '').slice(0, 8);
+    const idMap = new Map<string, string>();
+
+    const getScopedId = (origId: string): string => {
+      if (!origId) return origId;
+      if (origId.endsWith(`_${userSuffix}`)) return origId;
+      if (!idMap.has(origId)) {
+        idMap.set(origId, `${origId}_${userSuffix}`);
+      }
+      return idMap.get(origId)!;
+    };
+
+    const scopedAccounts = accounts.map((a) => ({
+      ...a,
+      id: getScopedId(a.id),
+    }));
+
+    const scopedTransactions = validTransactions.map((t) => ({
+      ...t,
+      id: getScopedId(t.id),
+      accountId: getScopedId(t.accountId),
+      destinationAccountId: t.destinationAccountId ? getScopedId(t.destinationAccountId) : undefined,
+    }));
+
+    const scopedBudgets = budgets.map((b) => ({
+      ...b,
+      id: getScopedId(b.id),
+    }));
+
+    const scopedGoals = goals.map((g) => ({
+      ...g,
+      id: getScopedId(g.id),
+    }));
+
+    const scopedContributions = validContributions.map((c) => ({
+      ...c,
+      id: getScopedId(c.id),
+      goalId: getScopedId(c.goalId),
+    }));
+
+    const scopedRecurring = validRecurring.map((r) => ({
+      ...r,
+      id: getScopedId(r.id),
+      accountId: getScopedId(r.accountId),
+    }));
+
+    const scopedReconciliations = validReconciliations.map((rec) => ({
+      ...rec,
+      id: getScopedId(rec.id),
+      accountId: getScopedId(rec.accountId),
+      adjustmentTransactionId: rec.adjustmentTransactionId ? getScopedId(rec.adjustmentTransactionId) : undefined,
+    }));
+
+    // Step 4: Write validated, scoped records to user's Supabase cloud storage
     await cloudEngine.writeAllData(
-      accounts,
-      validTransactions,
-      budgets,
-      goals,
-      validContributions,
-      validRecurring,
+      scopedAccounts,
+      scopedTransactions,
+      scopedBudgets,
+      scopedGoals,
+      scopedContributions,
+      scopedRecurring,
       preferences,
-      validReconciliations
+      scopedReconciliations
     );
 
     const importedSummary: MigrationSummary = {
-      accountsCount: accounts.length,
-      transactionsCount: validTransactions.length,
-      budgetsCount: budgets.length,
-      goalsCount: goals.length,
-      contributionsCount: validContributions.length,
-      recurringCount: validRecurring.length,
-      reconciliationsCount: validReconciliations.length,
+      accountsCount: scopedAccounts.length,
+      transactionsCount: scopedTransactions.length,
+      budgetsCount: scopedBudgets.length,
+      goalsCount: scopedGoals.length,
+      contributionsCount: scopedContributions.length,
+      recurringCount: scopedRecurring.length,
+      reconciliationsCount: scopedReconciliations.length,
       hasPreferences: Boolean(preferences),
     };
 
@@ -168,9 +223,12 @@ export async function executeLocalToCloudMigration(
       importedCounts: importedSummary,
       backupBlobUrl: backupUrl,
     };
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Migration execution error:', error);
     const errorMsg =
-      error instanceof Error ? error.message : 'ক্লাউডে মাইগ্রেশন করার সময় ত্রুটি ঘটেছে।';
+      error?.message ||
+      error?.error_description ||
+      (error instanceof Error ? error.message : 'ক্লাউডে মাইগ্রেশন করার সময় ত্রুটি ঘটেছে।');
     return {
       success: false,
       importedCounts: {
