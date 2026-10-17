@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://personal-finance-super-app.local/schema/report.schema.json",
+  "title": "AntigravityTaskReport",
+  "description": "Standardized schema for Antigravity Agent task reports in Personal Finance Super App",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "phase",
+    "task_status",
+    "summary",
+    "changed_files",
+    "commands_run",
+    "build_result",
+    "test_results",
+    "errors",
+    "risks",
+    "next_recommended_action",
+    "project_progress_percent",
+    "verification_type",
+    "timestamp"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the report schema (e.g. 1.0.0)"
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for the task or sub-phase (e.g. phase-2i-nav-fix)"
+    },
+    "phase": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable phase title (e.g. Phase 2I — Navigation Functional Fix)"
+    },
+    "task_status": {
+      "type": "string",
+      "enum": ["SUCCESS", "FAILURE", "PARTIAL", "BLOCKED"],
+      "description": "Final execution status of the task"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Concise summary of actions taken and architectural decisions made"
+    },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "List of relative file paths created, modified, or inspected"
+    },
+    "commands_run": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "exit_code"],
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The exact shell command executed"
+          },
+          "exit_code": {
+            "type": "integer",
+            "description": "Process exit code (0 for success, non-zero for failure)"
+          },
+          "stdout_summary": {
+            "type": "string",
+            "description": "Optional brief summary of command output without leaking secrets"
+          }
+        }
+      },
+      "description": "List of terminal verification commands run during the task"
+    },
+    "build_result": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "SKIPPED"],
+      "description": "Outcome of project build verification (e.g. npm run build)"
+    },
+    "test_results": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Summary of type checking, linting, or automated test executions"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of errors, exceptions, or failures encountered during the task"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Known risks, edge cases, or regression warnings"
+    },
+    "next_recommended_action": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Specific recommended next phase or prompt to execute"
+    },
+    "project_progress_percent": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Provisional weighted milestone progress percentage between 0 and 100"
+    },
+    "verification_type": {
+      "type": "string",
+      "enum": ["VERIFIED", "INFERRED", "NOT_VERIFIED"],
+      "description": "Classification of evidence backing the report findings"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when the report was finalized"
+    }
+  }
+}

@@ -18,6 +18,8 @@ build/
 .env.*
 !.env.example
 !.env.template
+supabase email pass/
+scratch/
 
 # 4. Local Database, Backups & Dumps
 *.sqlite
@@ -58,3 +60,10 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# 9. Local Report Automation Queues & Secrets
+.automation/reports/
+.automation/prompts/
+.automation/logs/
+.automation/*.local.json
+.automation/.env*

@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "phase-template-placeholder",
+  "phase": "Phase Placeholder — Replace With Phase Name",
+  "task_status": "PARTIAL",
+  "summary": "[PLACEHOLDER] Provide a factual 1-3 sentence summary of the task scope, changes performed, and key decisions.",
+  "changed_files": [
+    "src/example/relative-path-to-modified-file.ts"
+  ],
+  "commands_run": [
+    {
+      "command": "cmd.exe /c \"npm.cmd run build\"",
+      "exit_code": 0,
+      "stdout_summary": "[VERIFIED] Build succeeded with exit code 0."
+    },
+    {
+      "command": "cmd.exe /c \"npx.cmd tsc --noEmit\"",
+      "exit_code": 0,
+      "stdout_summary": "[VERIFIED] Zero TypeScript compilation errors."
+    }
+  ],
+  "build_result": "PASS",
+  "test_results": "[VERIFIED] TypeScript strict check: 0 errors. [UNVERIFIED ASSUMPTION] Manual end-to-end user experience assumes default browser font sizing.",
+  "errors": [],
+  "risks": [
+    "[UNVERIFIED ASSUMPTION] Edge cases in responsive width below 320px remain unverified without physical device testing.",
+    "[AGENT-REPORTED] Back-end persistence layer is not connected; state resets on full page reload."
+  ],
+  "next_recommended_action": "[PLACEHOLDER] Specify the exact recommended follow-up task or phase name.",
+  "project_progress_percent": 30.0,
+  "verification_type": "VERIFIED",
+  "timestamp": "2026-10-16T12:00:00Z"
+}
