@@ -80,7 +80,15 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({ onGuestExplore }) => {
       await signInWithGoogle();
     } catch (err: any) {
       console.error('Google Sign-In error:', err);
-      setErrorMessage(err.message || 'Google দিয়ে সাইন-ইন করা যায়নি। দয়া করে ইমেইল ও পাসওয়ার্ড ব্যবহার করুন।');
+      let msg = err?.message || '';
+      if (msg.includes('provider is not enabled') || msg.includes('Unsupported provider')) {
+        msg = 'আপনার Supabase প্রজেক্টে এখনো Google Provider সক্রিয় (Enable) করা হয়নি। অনুগ্রহ করে আপনার নাম, ইমেইল ও পাসওয়ার্ড দিয়ে একাউন্ট তৈরি করুন অথবা নিচের "গেস্ট হিসেবে ঘুরে দেখুন" বাটনে চাপ দিন।';
+      } else if (msg.includes('Supabase কনফিগারেশন অনুপস্থিত')) {
+        msg = 'Supabase কনফিগারেশন পাওয়া যায়নি। অনুগ্রহ করে নিচের "গেস্ট হিসেবে আগে ঘুরে দেখুন" বাটনে ক্লিক করুন।';
+      } else {
+        msg = msg || 'Google দিয়ে সাইন-ইন করা যায়নি। দয়া করে নাম, ইমেইল ও পাসওয়ার্ড দিয়ে একাউন্ট খুলুন।';
+      }
+      setErrorMessage(msg);
       setIsLoading(false);
     }
   };
