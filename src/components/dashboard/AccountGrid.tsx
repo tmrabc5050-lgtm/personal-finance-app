@@ -21,6 +21,7 @@ export interface AccountGridProps {
   isLoading?: boolean;
   onAddAccount?: () => void;
   onEditAccount?: (account: Account) => void;
+  onViewAllWallets?: () => void;
 }
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
@@ -53,6 +54,7 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
   isLoading = false,
   onAddAccount,
   onEditAccount,
+  onViewAllWallets,
 }) => {
   if (isLoading) {
     return (
@@ -86,16 +88,33 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
             {toBengaliNumeral(accounts.length)}টি সক্রিয় হিসাব
           </span>
         </div>
-        {onAddAccount && (
-          <button
-            type="button"
-            className="btn-card-action"
-            onClick={onAddAccount}
-            aria-label="নতুন অ্যাকাউন্ট যোগ করুন"
-          >
-            + অ্যাকাউন্ট যোগ
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {onViewAllWallets && (
+            <button
+              type="button"
+              className="btn-card-action"
+              onClick={onViewAllWallets}
+              style={{
+                background: 'rgba(56, 189, 248, 0.1)',
+                color: '#38bdf8',
+                borderColor: 'rgba(56, 189, 248, 0.25)',
+              }}
+              aria-label="সব ওয়ালেট দেখুন"
+            >
+              👛 সব ওয়ালেট →
+            </button>
+          )}
+          {onAddAccount && (
+            <button
+              type="button"
+              className="btn-card-action"
+              onClick={onAddAccount}
+              aria-label="নতুন অ্যাকাউন্ট যোগ করুন"
+            >
+              + অ্যাকাউন্ট যোগ
+            </button>
+          )}
+        </div>
       </div>
 
       {accounts.length === 0 ? (

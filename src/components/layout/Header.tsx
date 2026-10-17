@@ -29,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems = [
     { id: 'dashboard', label: 'ড্যাশবোর্ড' },
+    { id: 'wallets', label: 'ওয়ালেট' },
     { id: 'transactions', label: 'লেনদেন' },
     { id: 'recurring', label: 'পুনরাবৃত্ত' },
     { id: 'forecast', label: 'পূর্বাভাস' },
@@ -36,7 +37,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'budgets', label: 'বাজেট' },
     { id: 'reports', label: 'রিপোর্ট' },
     { id: 'goals', label: 'সঞ্চয়' },
-    { id: 'accounts', label: 'অ্যাকাউন্টস' },
   ];
 
   return (

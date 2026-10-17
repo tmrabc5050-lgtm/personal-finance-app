@@ -38,6 +38,7 @@ import {
   persistentFinanceService,
   PersistentFinanceService,
 } from './services/persistentFinanceService';
+import { WalletsView } from './components/wallets/WalletsView';
 import { Account, AccountType, Transaction, TransactionType } from './types/dashboard';
 import {
   DashboardPreferences,
@@ -52,6 +53,7 @@ interface FeedbackToast {
 
 export type AppView =
   | 'dashboard'
+  | 'wallets'
   | 'history'
   | 'budgets'
   | 'reports'
@@ -485,10 +487,62 @@ function AppContent() {
     setIsTransferModalOpen(true);
   };
 
+  const handleAutoSeedBangladeshiWallets = async () => {
+    try {
+      const existingAccounts = data?.accounts ?? [];
+      const presets: Array<{ name: string; type: AccountType; masked?: string }> = [
+        { name: 'হাতে নগদ (ক্যাশ)', type: 'cash' },
+        { name: 'বিকাশ (bKash)', type: 'bkash', masked: '০১৭**-******' },
+        { name: 'নগদ (Nagad)', type: 'nagad', masked: '০১৮**-******' },
+        { name: 'ব্যাংক অ্যাকাউন্ট', type: 'bank', masked: '১২৩-***-৭৮৯' },
+        { name: 'রকেট (Rocket)', type: 'other', masked: '০১৬**-******' },
+      ];
+
+      let addedCount = 0;
+      for (const p of presets) {
+        const alreadyExists = existingAccounts.some(
+          (acc) =>
+            acc.name.toLowerCase().includes(p.name.toLowerCase()) ||
+            (p.type !== 'other' && acc.type === p.type)
+        );
+        if (!alreadyExists) {
+          await createAccount({
+            name: p.name,
+            type: p.type,
+            initialBalancePaisa: 0n,
+            accountNumberMasked: p.masked,
+          });
+          addedCount++;
+        }
+      }
+
+      await refetch();
+      if (addedCount > 0) {
+        setFeedbackToast({
+          type: 'success',
+          message: `সফলভাবে ${addedCount}টি বাংলাদেশি ওয়ালেট যুক্ত করা হয়েছে!`,
+        });
+      } else {
+        setFeedbackToast({
+          type: 'info',
+          message: 'সকল প্রধান বাংলাদেশি ওয়ালেট ইতিমধ্যে যুক্ত রয়েছে।',
+        });
+      }
+    } catch (err) {
+      setFeedbackToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'ওয়ালেট যোগ করা সম্ভব হয়নি।',
+      });
+    }
+  };
+
   const handleNavigate = (section: string) => {
     setActiveSection(section);
     if (section === 'transactions') {
       setCurrentView('history');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (section === 'wallets' || section === 'accounts') {
+      setCurrentView('wallets');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (section === 'budgets') {
       setCurrentView('budgets');
@@ -581,8 +635,31 @@ function AppContent() {
           </div>
         )}
 
-        {/* View Switcher: History, Budgets, Reports, Goals vs Dashboard Grid */}
-        {currentView === 'history' ? (
+        {/* View Switcher: Wallets, History, Budgets, Reports, Goals vs Dashboard Grid */}
+        {currentView === 'wallets' ? (
+          <WalletsView
+            accounts={data?.accounts ?? []}
+            transactions={allTransactions}
+            isBalanceHidden={isBalanceHidden}
+            onToggleHideBalance={toggleBalanceVisibility}
+            onOpenAddAccount={handleOpenAddAccount}
+            onOpenEditAccount={handleOpenEditAccount}
+            onOpenTransfer={(_sourceAccountId) => {
+              setEditingTransfer(null);
+              setIsTransferModalOpen(true);
+            }}
+            onOpenAddTransaction={(type) => {
+              setEditingTx(null);
+              setTxModalDefaultType(type);
+              setIsTxModalOpen(true);
+            }}
+            onBackToDashboard={() => {
+              setCurrentView('dashboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onAutoSeedBangladeshiWallets={handleAutoSeedBangladeshiWallets}
+          />
+        ) : currentView === 'history' ? (
           <TransactionHistoryView
             accounts={data?.accounts ?? []}
             isBalanceHidden={isBalanceHidden}
@@ -768,6 +845,7 @@ function AppContent() {
                               isLoading={isLoading}
                               onAddAccount={handleOpenAddAccount}
                               onEditAccount={handleOpenEditAccount}
+                              onViewAllWallets={() => handleNavigate('wallets')}
                             />
                           </div>
                         );

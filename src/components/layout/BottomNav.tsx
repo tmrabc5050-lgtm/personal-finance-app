@@ -23,7 +23,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           href="#dashboard"
           className={`bottom-nav-item ${activeSection === 'dashboard' ? 'bottom-nav-item-active' : ''}`}
           aria-current={activeSection === 'dashboard' ? 'page' : undefined}
-          onClick={() => onNavigate?.('dashboard')}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate?.('dashboard');
+          }}
         >
           <span className="bottom-nav-icon" aria-hidden="true">
             🏠
@@ -32,15 +35,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         </a>
 
         <a
-          href="#transactions"
-          className={`bottom-nav-item ${activeSection === 'transactions' ? 'bottom-nav-item-active' : ''}`}
-          aria-current={activeSection === 'transactions' ? 'page' : undefined}
-          onClick={() => onNavigate?.('transactions')}
+          href="#wallets"
+          className={`bottom-nav-item ${activeSection === 'wallets' ? 'bottom-nav-item-active' : ''}`}
+          aria-current={activeSection === 'wallets' ? 'page' : undefined}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate?.('wallets');
+          }}
         >
           <span className="bottom-nav-icon" aria-hidden="true">
-            📝
+            👛
           </span>
-          <span>লেনদেন</span>
+          <span>ওয়ালেট</span>
         </a>
 
         {/* Central Prominent Floating Action */}
@@ -54,10 +60,28 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         </button>
 
         <a
+          href="#transactions"
+          className={`bottom-nav-item ${activeSection === 'transactions' ? 'bottom-nav-item-active' : ''}`}
+          aria-current={activeSection === 'transactions' ? 'page' : undefined}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate?.('transactions');
+          }}
+        >
+          <span className="bottom-nav-icon" aria-hidden="true">
+            📝
+          </span>
+          <span>লেনদেন</span>
+        </a>
+
+        <a
           href="#budgets"
           className={`bottom-nav-item ${activeSection === 'budgets' ? 'bottom-nav-item-active' : ''}`}
           aria-current={activeSection === 'budgets' ? 'page' : undefined}
-          onClick={() => onNavigate?.('budgets')}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate?.('budgets');
+          }}
         >
           <span className="bottom-nav-icon" aria-hidden="true">
             📋
@@ -69,24 +93,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           href="#reports"
           className={`bottom-nav-item ${activeSection === 'reports' ? 'bottom-nav-item-active' : ''}`}
           aria-current={activeSection === 'reports' ? 'page' : undefined}
-          onClick={() => onNavigate?.('reports')}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate?.('reports');
+          }}
         >
           <span className="bottom-nav-icon" aria-hidden="true">
             📊
           </span>
           <span>রিপোর্ট</span>
-        </a>
-
-        <a
-          href="#goals"
-          className={`bottom-nav-item ${activeSection === 'goals' ? 'bottom-nav-item-active' : ''}`}
-          aria-current={activeSection === 'goals' ? 'page' : undefined}
-          onClick={() => onNavigate?.('goals')}
-        >
-          <span className="bottom-nav-icon" aria-hidden="true">
-            🎯
-          </span>
-          <span>সঞ্চয়</span>
         </a>
       </div>
     </nav>
